@@ -19,7 +19,7 @@ func SetupRouter(
 
 	// Category routes
 	r.Post("/categories", categoryHandler.CreateCategory)
-	r.Get("/categories", categoryHandler.GetAllCategories)
+	r.Get("/users/{userID}/categories", categoryHandler.GetCategoriesByUser)
 
 	// Group routes
 	r.Post("/groups", groupHandler.CreateGroup)

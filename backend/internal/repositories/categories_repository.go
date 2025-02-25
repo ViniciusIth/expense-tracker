@@ -18,11 +18,11 @@ func NewCategoryRepository(db *pgxpool.Pool) *CategoryRepository {
 
 func (r *CategoryRepository) CreateCategory(category *models.Category) error {
 	query := `
-		INSERT INTO categories (name)
-		VALUES ($1)
+		INSERT INTO categories (user_id, name)
+		VALUES ($1, $2)
 		RETURNING category_id
 	`
-	err := r.db.QueryRow(context.Background(), query, category.Name).
+	err := r.db.QueryRow(context.Background(), query, category.UserID, category.Name).
 		Scan(&category.CategoryID)
 	if err != nil {
 		return fmt.Errorf("failed to create category: %w", err)
@@ -45,13 +45,13 @@ func (r *CategoryRepository) GetCategoryByID(categoryID int) (*models.Category, 
 	return category, nil
 }
 
-// Similar to group repository get all, this function will be useless in the future. We should get all the categories by user.
-func (r *CategoryRepository) GetAllCategories() ([]models.Category, error) {
+func (r *CategoryRepository) GetCategoriesByUser(userID int) ([]models.Category, error) {
 	query := `
-		SELECT category_id, name, created_at
+		SELECT category_id, user_id, name
 		FROM categories
+		WHERE user_id = $1
 	`
-	rows, err := r.db.Query(context.Background(), query)
+	rows, err := r.db.Query(context.Background(), query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get categories: %w", err)
 	}
@@ -60,7 +60,7 @@ func (r *CategoryRepository) GetAllCategories() ([]models.Category, error) {
 	var categories []models.Category
 	for rows.Next() {
 		var category models.Category
-		err := rows.Scan(&category.CategoryID, &category.Name)
+		err := rows.Scan(&category.CategoryID, &category.UserID, &category.Name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan category: %w", err)
 		}

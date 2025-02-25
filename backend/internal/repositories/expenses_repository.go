@@ -18,9 +18,9 @@ func NewExpenseRepository(db *pgxpool.Pool) *ExpenseRepository {
 
 func (r *ExpenseRepository) CreateExpense(expense *models.Expense) error {
 	query := `
-		INSERT INTO expense_tracker.expenses (user_id, category_id, group_id, description, observation, amount)
+		INSERT INTO expenses (user_id, category_id, group_id, description, observation, amount)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING expense_id, created_at
+		RETURNING expense_id
 	`
 	err := r.db.QueryRow(context.Background(), query,
 		expense.UserID, expense.CategoryID, expense.GroupID, expense.Description, expense.Observation, expense.Amount).
@@ -34,8 +34,8 @@ func (r *ExpenseRepository) CreateExpense(expense *models.Expense) error {
 func (r *ExpenseRepository) GetExpenseByID(expenseID int) (*models.Expense, error) {
 	expense := &models.Expense{}
 	query := `
-		SELECT expense_id, user_id, category_id, group_id, description, observation, amount, created_at
-		FROM expense_tracker.expenses
+		SELECT expense_id, user_id, category_id, group_id, description, observation, amount
+		FROM expenses
 		WHERE expense_id = $1
 	`
 	err := r.db.QueryRow(context.Background(), query, expenseID).
@@ -48,8 +48,8 @@ func (r *ExpenseRepository) GetExpenseByID(expenseID int) (*models.Expense, erro
 
 func (r *ExpenseRepository) GetExpensesByUser(userID int) ([]models.Expense, error) {
 	query := `
-		SELECT expense_id, user_id, category_id, group_id, description, observation, amount, created_at
-		FROM expense_tracker.expenses
+		SELECT expense_id, user_id, category_id, group_id, description, observation, amount
+		FROM expenses
 		WHERE user_id = $1
 	`
 	rows, err := r.db.Query(context.Background(), query, userID)

@@ -17,17 +17,44 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(user *models.User) error {
+	// Start a transaction
+	tx, err := r.db.Begin(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer tx.Rollback(context.Background())
+
 	query := `
-	INSERT INTO users (email, password, name)
-	VALUES ($1, $2, $3)
-	RETURNING user_id
+		INSERT INTO users (email, password, name)
+		VALUES ($1, $2, $3)
+		RETURNING user_id
 	`
-
-	err := r.db.QueryRow(context.Background(), query, user.Email, user.Password, user.Name).Scan(&user.UserID)
-
+	err = tx.QueryRow(context.Background(), query, user.Email, user.Password, user.Name).
+		Scan(&user.UserID)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
+
+	categoryQuery := `
+		INSERT INTO categories (user_id, name)
+		VALUES ($1, $2)
+	`
+
+	categories := [6]string{"Transporte", "Saúde", "Alimentação", "Recorrentes", "Recreação", "Pessoal"}
+
+	for _, category := range categories {
+		_, err = tx.Exec(context.Background(), categoryQuery, user.UserID, category)
+		if err != nil {
+			return fmt.Errorf("failed to create default category: %w", err)
+		}
+	}
+
+	// Commit the transaction
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
 	return nil
 }
 
