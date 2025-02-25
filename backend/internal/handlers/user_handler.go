@@ -4,16 +4,19 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ViniciusIth/expanse_tracker/internal/logging"
 	"github.com/ViniciusIth/expanse_tracker/internal/models"
 	"github.com/ViniciusIth/expanse_tracker/internal/repositories"
+	"go.uber.org/zap"
 )
 
 type UserHandler struct {
 	userRepo *repositories.UserRepository
+	logger   *logging.Logger
 }
 
-func NewUserHandler(userRepo *repositories.UserRepository) *UserHandler {
-	return &UserHandler{userRepo: userRepo}
+func NewUserHandler(userRepo *repositories.UserRepository, logger *logging.Logger) *UserHandler {
+	return &UserHandler{userRepo: userRepo, logger: logger}
 }
 
 func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -21,6 +24,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
+		h.logger.Error("Invalid request payload", zap.Error(err))
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}

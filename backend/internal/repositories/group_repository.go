@@ -4,16 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ViniciusIth/expanse_tracker/internal/logging"
 	"github.com/ViniciusIth/expanse_tracker/internal/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type GroupRepository struct {
-	db *pgxpool.Pool
+	db     *pgxpool.Pool
+	logger *logging.Logger
 }
 
-func NewGroupRepository(db *pgxpool.Pool) *GroupRepository {
-	return &GroupRepository{db: db}
+func NewGroupRepository(db *pgxpool.Pool, logger *logging.Logger) *GroupRepository {
+	return &GroupRepository{db: db, logger: logger}
 }
 
 func (r *GroupRepository) CreateGroup(group *models.Group) error {
@@ -47,10 +49,10 @@ func (r *GroupRepository) GetGroupByID(groupID int) (*models.Group, error) {
 
 func (r *GroupRepository) GetGroupsByUser(userID int) ([]models.Group, error) {
 	query := `
-		SELECT group.group_id, group.name
-		FROM groups group
-		JOIN group_members members ON group.group_id = members.group_id
-		WHERE members.user_id = $1
+		SELECT gp.group_id, gp.name
+		FROM groups gp
+		JOIN group_members members ON gp.group_id = members.group_id
+		WHERE members.user_id = 3
 	`
 	rows, err := r.db.Query(context.Background(), query, userID)
 	if err != nil {

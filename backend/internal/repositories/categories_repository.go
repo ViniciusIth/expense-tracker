@@ -4,16 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ViniciusIth/expanse_tracker/internal/logging"
 	"github.com/ViniciusIth/expanse_tracker/internal/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type CategoryRepository struct {
-	db *pgxpool.Pool
+	db     *pgxpool.Pool
+	logger *logging.Logger
 }
 
-func NewCategoryRepository(db *pgxpool.Pool) *CategoryRepository {
-	return &CategoryRepository{db: db}
+func NewCategoryRepository(db *pgxpool.Pool, logger *logging.Logger) *CategoryRepository {
+	return &CategoryRepository{db: db, logger: logger}
 }
 
 func (r *CategoryRepository) CreateCategory(category *models.Category) error {

@@ -5,25 +5,26 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ViniciusIth/expanse_tracker/internal/logging"
 	"github.com/ViniciusIth/expanse_tracker/internal/repositories"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 )
 
-// GroupMemberHandler handles HTTP requests for group member operations
 type GroupMemberHandler struct {
 	groupMemberRepo *repositories.GroupMemberRepository
+	logger          *logging.Logger
 }
 
-// NewGroupMemberHandler creates a new GroupMemberHandler
-func NewGroupMemberHandler(groupMemberRepo *repositories.GroupMemberRepository) *GroupMemberHandler {
-	return &GroupMemberHandler{groupMemberRepo: groupMemberRepo}
+func NewGroupMemberHandler(groupMemberRepo *repositories.GroupMemberRepository, logger *logging.Logger) *GroupMemberHandler {
+	return &GroupMemberHandler{groupMemberRepo: groupMemberRepo, logger: logger}
 }
 
-// AddUserToGroup adds a user to a group
 func (h *GroupMemberHandler) AddUserToGroup(w http.ResponseWriter, r *http.Request) {
 	groupIDStr := chi.URLParam(r, "groupID")
 	groupID, err := strconv.Atoi(groupIDStr)
 	if err != nil {
+		h.logger.Error("Invalid group ID", zap.Error(err))
 		http.Error(w, "Invalid group ID", http.StatusBadRequest)
 		return
 	}
@@ -31,13 +32,14 @@ func (h *GroupMemberHandler) AddUserToGroup(w http.ResponseWriter, r *http.Reque
 	userIDStr := chi.URLParam(r, "userID")
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
+		h.logger.Error("Invalid user ID", zap.Error(err))
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	// Add the user to the group
 	err = h.groupMemberRepo.AddUserToGroup(groupID, userID)
 	if err != nil {
+		h.logger.Error("Failed to add user to group", zap.Error(err))
 		http.Error(w, "Failed to add user to group", http.StatusInternalServerError)
 		return
 	}
@@ -45,11 +47,11 @@ func (h *GroupMemberHandler) AddUserToGroup(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusCreated)
 }
 
-// RemoveUserFromGroup removes a user from a group
 func (h *GroupMemberHandler) RemoveUserFromGroup(w http.ResponseWriter, r *http.Request) {
 	groupIDStr := chi.URLParam(r, "groupID")
 	groupID, err := strconv.Atoi(groupIDStr)
 	if err != nil {
+		h.logger.Error("Invalid group ID", zap.Error(err))
 		http.Error(w, "Invalid group ID", http.StatusBadRequest)
 		return
 	}
@@ -57,13 +59,14 @@ func (h *GroupMemberHandler) RemoveUserFromGroup(w http.ResponseWriter, r *http.
 	userIDStr := chi.URLParam(r, "userID")
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
+		h.logger.Error("Invalid user ID", zap.Error(err))
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	// Remove the user from the group
 	err = h.groupMemberRepo.RemoveUserFromGroup(groupID, userID)
 	if err != nil {
+		h.logger.Error("Failed to remove user from group", zap.Error(err))
 		http.Error(w, "Failed to remove user from group", http.StatusInternalServerError)
 		return
 	}
@@ -71,23 +74,22 @@ func (h *GroupMemberHandler) RemoveUserFromGroup(w http.ResponseWriter, r *http.
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// GetGroupMembers retrieves all members of a group
 func (h *GroupMemberHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	groupIDStr := chi.URLParam(r, "groupID")
 	groupID, err := strconv.Atoi(groupIDStr)
 	if err != nil {
+		h.logger.Error("Invalid group ID", zap.Error(err))
 		http.Error(w, "Invalid group ID", http.StatusBadRequest)
 		return
 	}
 
-	// Retrieve all members of the group
 	members, err := h.groupMemberRepo.GetGroupMembers(groupID)
 	if err != nil {
+		h.logger.Error("Failed to retrieve group members", zap.Error(err))
 		http.Error(w, "Failed to retrieve group members", http.StatusInternalServerError)
 		return
 	}
 
-	// Return the members as JSON
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(members)

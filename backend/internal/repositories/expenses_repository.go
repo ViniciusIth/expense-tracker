@@ -4,16 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ViniciusIth/expanse_tracker/internal/logging"
 	"github.com/ViniciusIth/expanse_tracker/internal/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type ExpenseRepository struct {
-	db *pgxpool.Pool
+	db     *pgxpool.Pool
+	logger *logging.Logger
 }
 
-func NewExpenseRepository(db *pgxpool.Pool) *ExpenseRepository {
-	return &ExpenseRepository{db: db}
+func NewExpenseRepository(db *pgxpool.Pool, logger *logging.Logger) *ExpenseRepository {
+	return &ExpenseRepository{db: db, logger: logger}
 }
 
 func (r *ExpenseRepository) CreateExpense(expense *models.Expense) error {

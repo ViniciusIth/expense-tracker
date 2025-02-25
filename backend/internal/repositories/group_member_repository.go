@@ -4,16 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ViniciusIth/expanse_tracker/internal/logging"
 	"github.com/ViniciusIth/expanse_tracker/internal/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type GroupMemberRepository struct {
-	db *pgxpool.Pool
+	db     *pgxpool.Pool
+	logger *logging.Logger
 }
 
-func NewGroupMemberRepository(db *pgxpool.Pool) *GroupMemberRepository {
-	return &GroupMemberRepository{db: db}
+func NewGroupMemberRepository(db *pgxpool.Pool, logger *logging.Logger) *GroupMemberRepository {
+	return &GroupMemberRepository{db: db, logger: logger}
 }
 
 func (r *GroupMemberRepository) AddUserToGroup(groupID, userID int) error {

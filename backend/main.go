@@ -1,58 +1,50 @@
 package main
 
 import (
-	"context"
-	"log"
 	"net/http"
 
 	"github.com/ViniciusIth/expanse_tracker/internal/api"
 	"github.com/ViniciusIth/expanse_tracker/internal/database"
 	"github.com/ViniciusIth/expanse_tracker/internal/handlers"
+	"github.com/ViniciusIth/expanse_tracker/internal/logging"
 	"github.com/ViniciusIth/expanse_tracker/internal/repositories"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 )
 
 const connString = "postgres://postgres:main@localhost:5432/expense_tracker"
 
 func main() {
+	logger := logging.NewLogger(true)
+	defer logger.Sync()
+
 	db, err := database.CreateConnection(connString)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v\n", err)
+		logger.Fatal("Failed to initialize database: %v", zap.Error(err))
 	}
+
+	logger.Info("Successfully connected to the database!")
 	defer database.Close(db)
 
-	testDatabaseConnection(db)
-
 	// Repositories
-	userRepo := repositories.NewUserRepository(db)
-	categoryRepo := repositories.NewCategoryRepository(db)
-	groupRepo := repositories.NewGroupRepository(db)
-	groupMemberRepo := repositories.NewGroupMemberRepository(db)
-	expenseRepo := repositories.NewExpenseRepository(db)
+	userRepo := repositories.NewUserRepository(db, logger)
+	categoryRepo := repositories.NewCategoryRepository(db, logger)
+	groupRepo := repositories.NewGroupRepository(db, logger)
+	groupMemberRepo := repositories.NewGroupMemberRepository(db, logger)
+	expenseRepo := repositories.NewExpenseRepository(db, logger)
 
 	// Handlers
-	userHandler := handlers.NewUserHandler(userRepo)
-	categoryHandler := handlers.NewCategoryHandler(categoryRepo)
-	groupHandler := handlers.NewGroupHandler(groupRepo)
-	groupMemberHandler := handlers.NewGroupMemberHandler(groupMemberRepo)
-	expenseHandler := handlers.NewExpenseHandler(expenseRepo)
+	userHandler := handlers.NewUserHandler(userRepo, logger)
+	categoryHandler := handlers.NewCategoryHandler(categoryRepo, logger)
+	groupHandler := handlers.NewGroupHandler(groupRepo, logger)
+	groupMemberHandler := handlers.NewGroupMemberHandler(groupMemberRepo, logger)
+	expenseHandler := handlers.NewExpenseHandler(expenseRepo, logger)
 
 	// Set up the Chi router
 	r := api.SetupRouter(userHandler, categoryHandler, groupHandler, groupMemberHandler, expenseHandler)
 
 	// Start the HTTP server
-	log.Println("Starting server on :8080...")
+	logger.Info("Starting server on :8080...")
 	if err := http.ListenAndServe(":8080", r); err != nil {
-		log.Fatalf("Failed to start server: %v\n", err)
+		logger.Fatal("Failed to start server: %v", zap.Error(err))
 	}
-}
-
-func testDatabaseConnection(db *pgxpool.Pool) {
-	rows, err := db.Query(context.Background(), "SELECT 1")
-	if err != nil {
-		log.Fatalf("Failed to query database: %v\n", err)
-	}
-	defer rows.Close()
-
-	log.Println("Database connection test successful!")
 }

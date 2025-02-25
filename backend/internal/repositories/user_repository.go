@@ -4,16 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ViniciusIth/expanse_tracker/internal/logging"
 	"github.com/ViniciusIth/expanse_tracker/internal/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserRepository struct {
-	db *pgxpool.Pool
+	db     *pgxpool.Pool
+	logger *logging.Logger
 }
 
-func NewUserRepository(db *pgxpool.Pool) *UserRepository {
-	return &UserRepository{db: db}
+func NewUserRepository(db *pgxpool.Pool, logger *logging.Logger) *UserRepository {
+	return &UserRepository{db: db, logger: logger}
 }
 
 func (r *UserRepository) CreateUser(user *models.User) error {
