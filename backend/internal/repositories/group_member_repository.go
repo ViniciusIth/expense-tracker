@@ -18,7 +18,7 @@ func NewGroupMemberRepository(db *pgxpool.Pool) *GroupMemberRepository {
 
 func (r *GroupMemberRepository) AddUserToGroup(groupID, userID int) error {
 	query := `
-		INSERT INTO expense_tracker.group_members (group_id, user_id)
+		INSERT INTO group_members (group_id, user_id)
 		VALUES ($1, $2)
 	`
 	_, err := r.db.Exec(context.Background(), query, groupID, userID)
@@ -30,7 +30,7 @@ func (r *GroupMemberRepository) AddUserToGroup(groupID, userID int) error {
 
 func (r *GroupMemberRepository) RemoveUserFromGroup(groupID, userID int) error {
 	query := `
-		DELETE FROM expense_tracker.group_members
+		DELETE FROM group_members
 		WHERE group_id = $1 AND user_id = $2
 	`
 	_, err := r.db.Exec(context.Background(), query, groupID, userID)
@@ -43,7 +43,7 @@ func (r *GroupMemberRepository) RemoveUserFromGroup(groupID, userID int) error {
 func (r *GroupMemberRepository) GetGroupMembers(groupID int) ([]models.GroupMember, error) {
 	query := `
 		SELECT group_id, user_id, joined_at
-		FROM expense_tracker.group_members
+		FROM group_members
 		WHERE group_id = $1
 	`
 	rows, err := r.db.Query(context.Background(), query, groupID)

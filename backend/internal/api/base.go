@@ -23,7 +23,7 @@ func SetupRouter(
 
 	// Group routes
 	r.Post("/groups", groupHandler.CreateGroup)
-	r.Get("/groups", groupHandler.GetAllGroups)
+	r.Get("/users/{userID}/groups", groupHandler.GetGroupsByUser)
 
 	// Group member routes
 	r.Post("/groups/{groupID}/members/{userID}", groupMemberHandler.AddUserToGroup)

@@ -3,9 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/ViniciusIth/expanse_tracker/internal/models"
 	"github.com/ViniciusIth/expanse_tracker/internal/repositories"
+	"github.com/go-chi/chi/v5"
 )
 
 type GroupHandler struct {
@@ -36,8 +38,16 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(group)
 }
 
-func (h *GroupHandler) GetAllGroups(w http.ResponseWriter, r *http.Request) {
-	groups, err := h.groupRepo.GetAllGroups()
+func (h *GroupHandler) GetGroupsByUser(w http.ResponseWriter, r *http.Request) {
+	userIDStr := chi.URLParam(r, "userID")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Retrieve all groups for the user
+	groups, err := h.groupRepo.GetGroupsByUser(userID)
 	if err != nil {
 		http.Error(w, "Failed to retrieve groups", http.StatusInternalServerError)
 		return

@@ -45,13 +45,14 @@ func (r *GroupRepository) GetGroupByID(groupID int) (*models.Group, error) {
 	return group, nil
 }
 
-// Probably won't be useful in the future, maybe change to get all user repositories
-func (r *GroupRepository) GetAllGroups() ([]models.Group, error) {
+func (r *GroupRepository) GetGroupsByUser(userID int) ([]models.Group, error) {
 	query := `
-		SELECT group_id, name
-		FROM groups
+		SELECT group.group_id, group.name
+		FROM groups group
+		JOIN group_members members ON group.group_id = members.group_id
+		WHERE members.user_id = $1
 	`
-	rows, err := r.db.Query(context.Background(), query)
+	rows, err := r.db.Query(context.Background(), query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get groups: %w", err)
 	}
